@@ -48,7 +48,7 @@ And log in again.
 
 To automatically install & run wg-easy, simply run:
 
-<pre>
+```
 $ docker run -d \
   --name=wg-easy \
   -e LANG=de \
@@ -63,8 +63,8 @@ $ docker run -d \
   --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
   --sysctl="net.ipv4.ip_forward=1" \
   --restart unless-stopped \
-  ghcr.io/wg-easy/wg-easy
-</pre>
+  ghcr.io/redxouls/wg-easy
+```
 
 > 💡 Replace `YOUR_SERVER_IP` with your WAN IP, or a Dynamic DNS hostname.
 >
@@ -111,7 +111,7 @@ To update to the latest version, simply run:
 ```bash
 docker stop wg-easy
 docker rm wg-easy
-docker pull ghcr.io/wg-easy/wg-easy
+docker pull ghcr.io/redxouls/wg-easy
 ```
 
 And then run the `docker run -d \ ...` command above again.
