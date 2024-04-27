@@ -50,4 +50,4 @@ ENV DEBUG=Server,WireGuard
 
 # Run Web UI
 WORKDIR /app
-CMD ["/usr/bin/dumb-init", "node", "server.js"]
+CMD ["/bin/bash", "run.sh"]
