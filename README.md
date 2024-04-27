@@ -1,12 +1,13 @@
-# WireGuard Easy
+# WireGuard Easy with WireGuard-Go support
 
-[![Build & Publish Docker Image to Docker Hub](https://github.com/wg-easy/wg-easy/actions/workflows/deploy.yml/badge.svg?branch=production)](https://github.com/wg-easy/wg-easy/actions/workflows/deploy.yml)
-[![Lint](https://github.com/wg-easy/wg-easy/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/wg-easy/wg-easy/actions/workflows/lint.yml)
-![Docker](https://img.shields.io/docker/pulls/weejewel/wg-easy.svg)
-[![Sponsor](https://img.shields.io/github/sponsors/weejewel)](https://github.com/sponsors/WeeJeWel)
-![GitHub Stars](https://img.shields.io/github/stars/wg-easy/wg-easy)
+![Build & Deploy](https://github.com/redxouls/wg-easy/actions/workflows/deploy.yml/badge.svg)
+![Build & Deploy Development](https://github.com/redxouls/wg-easy/actions/workflows/deploy-development.yml/badge.svg)
+![GitHub Stars](https://img.shields.io/github/stars/redxouls/wg-easy)
 
-You have found the easiest way to install & manage WireGuard on any Linux host!
+
+You have found the easiest way to install & manage WireGuard on any Linux host **even without wireguard kernel support!**
+
+With official user-space implementation of wireguard([wireguard-go](https://github.com/WireGuard/wireguard-go)), the image provide fallback support for host without wireguard kernel. For more details, go to section [Support for WireGuard-Go](#support-for-wireguard-go).
 
 <p align="center">
   <img src="./assets/screenshot.png" width="802" />
@@ -24,10 +25,10 @@ You have found the easiest way to install & manage WireGuard on any Linux host!
 * Automatic Light / Dark Mode
 * Multilanguage Support
 * UI_TRAFFIC_STATS (default off)
+* Support host without wireguard kernel with official user-space implementation of [wireguard-go](https://github.com/WireGuard/wireguard-go).
 
 ## Requirements
 
-* A host with a kernel that supports WireGuard (all modern kernels).
 * A host with Docker installed.
 
 ## Installation
@@ -48,8 +49,8 @@ And log in again.
 
 To automatically install & run wg-easy, simply run:
 
-```
-$ docker run -d \
+```bash
+docker run -d \
   --name=wg-easy \
   -e LANG=de \
   -e WG_HOST=<b>🚨YOUR_SERVER_IP</b> \
@@ -57,13 +58,16 @@ $ docker run -d \
   -v ~/.wg-easy:/etc/wireguard \
   -p 51820:51820/udp \
   -p 51821:51821/tcp \
-  --device=/dev/net/tun \
   --cap-add=NET_ADMIN \
   --cap-add=SYS_MODULE \
   --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
   --sysctl="net.ipv4.ip_forward=1" \
   --restart unless-stopped \
   ghcr.io/redxouls/wg-easy
+  
+  # Optional:
+  # Add following options to manually attach TUN device node
+  # --device=/dev/net/tun \
 ```
 
 > 💡 Replace `YOUR_SERVER_IP` with your WAN IP, or a Dynamic DNS hostname.
@@ -115,6 +119,67 @@ docker pull ghcr.io/redxouls/wg-easy
 ```
 
 And then run the `docker run -d \ ...` command above again.
+
+With Docker Compose WireGuard Easy can be updated with a single command:
+`docker compose up --detach --pull always` (if an image tag is specified in the
+Compose file and it is not `latest`, make sure that it is changed to the desired
+one; by default it is omitted and
+[defaults to `latest`](https://docs.docker.com/engine/reference/run/#image-references)). \
+The WireGuared Easy container will be automatically recreated if a newer image
+was pulled.
+
+## Support for WireGuard-go
+
+To support the host without kernel wireguard, the official user-space implementation version of wireguard ([wireguard-go](https://github.com/WireGuard/wireguard-go)) is packed into the image.
+
+This can be achieved by building a derived image with this Dockerfile.
+
+```dockerfile
+# Dockerfile
+# --------------------------------------- #
+...
+
+# Install Linux packages and build wireguard-go
+RUN apk add go git make
+RUN git clone https://github.com/WireGuard/wireguard-go.git && \
+    make -C wireguard-go install && \
+    rm -r wireguard-go
+RUN apk del go git make
+
+...
+```
+
+Also, for wireguard-go to access `/dev/net/tun`, we create TUN device node before running the wg-easy server with the following scripts.
+
+```bash
+# src/run.sh
+# --------------------------------------- #
+#!/bin/bash
+
+# Create TUN device node
+mkdir -p /dev/net
+if [ ! -c /dev/net/tun ]; then
+    mknod /dev/net/tun c 10 200
+fi
+
+# Start wg-easy server
+/usr/bin/dumb-init node server.js
+```
+
+### Optional
+To attach your TUN device node manually, start the container with parameter `--device=/dev/net/tun`, or add these lines to the docker-compose.yml
+```yaml=
+services:
+  wg-easy:
+  ...
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+```
+
+## Supported Platforms
+
+* any platform the original wg-easy supports.
+* Synology DSM
 
 ## Common Use Cases
 
