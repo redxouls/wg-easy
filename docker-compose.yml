@@ -27,9 +27,7 @@ services:
       # - UI_TRAFFIC_STATS=true
       # - UI_CHART_TYPE=0 # (0 Charts disabled, 1 # Line chart, 2 # Area chart, 3 # Bar chart)
 
-    # For host without support of wireguard kernel implementation,
-    # the wireguard-go (an official userspace implementation) will be used.
-    # In this case, uncomment the following lines:
+    # Add following options to manually attach TUN device node
     # devices:
     #   - "/dev/net/tun:/dev/net/tun"
 
