@@ -39,6 +39,13 @@ RUN apk add --no-cache \
     iptables-legacy \
     wireguard-tools
 
+# Support fallback to slow userspace Wireguard implementation
+RUN apk add --no-cache go git make
+RUN git clone https://github.com/WireGuard/wireguard-go.git && \
+    make -C wireguard-go install && \
+    rm -rf wireguard-go
+RUN apk del go git make
+
 # Use iptables-legacy
 RUN update-alternatives --install /sbin/iptables iptables /sbin/iptables-legacy 10 --slave /sbin/iptables-restore iptables-restore /sbin/iptables-legacy-restore --slave /sbin/iptables-save iptables-save /sbin/iptables-legacy-save
 

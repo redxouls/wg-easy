@@ -26,6 +26,12 @@ services:
       # - WG_POST_DOWN=echo "Post Down" > /etc/wireguard/post-down.txt
       # - UI_TRAFFIC_STATS=true 
 
+    # For host without support of wireguard kernel implementation,
+    # the wireguard-go (an official userspace implementation) will be used.
+    # In this case, uncomment the following lines:
+    # devices:
+    #   - "/dev/net/tun:/dev/net/tun"
+
     image: ghcr.io/wg-easy/wg-easy
     container_name: wg-easy
     volumes:
